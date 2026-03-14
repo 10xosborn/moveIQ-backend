@@ -10,10 +10,14 @@ import connectDB from "./config/db.js";
 import authRoutes from "./routes/auth.routes.js";
 import incidentRoutes from "./routes/incident.routes.js";
 import routeRoutes from "./routes/route.routes.js";
+import notificationRoutes from "./routes/notification.routes.js";
+import activityRoutes from "./routes/activity.routes.js";
+import reportRoutes from "./routes/report.routes.js";
 // import researchRoutes from "./routes/research.routes.js";
 
 // recreate __dirname for ESM
 const __filename = fileURLToPath(import.meta.url);
+
 
 
 
@@ -39,6 +43,9 @@ app.use(morgan("dev"));
 app.use("/api/auth", authRoutes);
 app.use("/api/incidents", incidentRoutes);
 app.use("/api/routes", routeRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/activities", activityRoutes);
+app.use("/api/reports", reportRoutes);
 // app.use("/api/research", researchRoutes);
 
 // test route
