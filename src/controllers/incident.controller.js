@@ -1,3 +1,5 @@
+import Incident from "../models/incident.model.js";
+
 export const createIncident = async (req, res) => {
   res.status(501).json({
     success: false,
@@ -27,8 +29,29 @@ export const updateIncident = async (req, res) => {
 };
 
 export const deleteIncident = async (req, res) => {
-  res.status(501).json({
-    success: false,
-    message: "Delete incident not implemented yet",
-  });
+  try {
+    const { id } = req.params;
+
+    const incident = await Incident.findById(id);
+
+    if (!incident) {
+      return res.status(404).json({
+        success: false,
+        message: "Incident not found",
+      });
+    }
+
+    await incident.deleteOne();
+
+    return res.status(200).json({
+      success: true,
+      message: "Incident deleted successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to delete incident",
+      error: error.message,
+    });
+  }
 };

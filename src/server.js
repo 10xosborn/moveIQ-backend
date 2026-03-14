@@ -46,7 +46,8 @@ app.use("/api/routes", routeRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/activities", activityRoutes);
 app.use("/api/reports", reportRoutes);
-// app.use("/api/research", researchRoutes);
+app.use("/api/incidents", incidentRoutes);
+// app.use("/api/research", researchRoutes);s
 
 // test route
 app.get("/", (req, res) => {
