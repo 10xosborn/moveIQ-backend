@@ -9,10 +9,19 @@ import dotenv from "dotenv";
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/auth.routes.js";
 import incidentRoutes from "./routes/incident.routes.js";
+import routeRoutes from "./routes/route.routes.js";
 // import researchRoutes from "./routes/research.routes.js";
 
 // recreate __dirname for ESM
 const __filename = fileURLToPath(import.meta.url);
+
+
+
+
+
+
+
+
 const __dirname = path.dirname(__filename);
 
 // load environment variables
@@ -29,6 +38,7 @@ app.use(morgan("dev"));
 // routes
 app.use("/api/auth", authRoutes);
 app.use("/api/incidents", incidentRoutes);
+app.use("/api/routes", routeRoutes);
 // app.use("/api/research", researchRoutes);
 
 // test route
