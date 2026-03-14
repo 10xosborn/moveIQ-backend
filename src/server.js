@@ -9,7 +9,7 @@ import dotenv from "dotenv";
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/auth.routes.js";
 import incidentRoutes from "./routes/incident.routes.js";
-import researchRoutes from "./routes/research.routes.js";
+// import researchRoutes from "./routes/research.routes.js";
 
 // recreate __dirname for ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -29,7 +29,7 @@ app.use(morgan("dev"));
 // routes
 app.use("/api/auth", authRoutes);
 app.use("/api/incidents", incidentRoutes);
-app.use("/api/research", researchRoutes);
+// app.use("/api/research", researchRoutes);
 
 // test route
 app.get("/", (req, res) => {
