@@ -28,6 +28,12 @@ const incidentSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+
+    // route related to this incident
+    route: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Route",
+    },
   },
   {
     timestamps: true,
