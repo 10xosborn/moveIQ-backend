@@ -230,9 +230,6 @@ export const downvoteIncident = async (req, res) => {
     }
 
     
-    incident.upvotes = incident.upvotes.filter(uid => uid.toString() !== userId);
-
-    
     const isDownvoted = incident.downvotes.includes(userId);
     if (isDownvoted) {
       incident.downvotes = incident.downvotes.filter(uid => uid.toString() !== userId);
@@ -242,6 +239,89 @@ export const downvoteIncident = async (req, res) => {
 
     await incident.save();
     res.status(200).json({ success: true, data: { incident } });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const addComment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { text } = req.body;
+
+    if (!text) {
+      return res.status(400).json({ success: false, message: "Comment text is required" });
+    }
+
+    const incident = await Incident.findById(id);
+    if (!incident) {
+      return res.status(404).json({ success: false, message: "Incident not found" });
+    }
+
+    const newComment = {
+      user: req.user.id,
+      text,
+    };
+
+    incident.comments.push(newComment);
+    await incident.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Comment added successfully",
+      data: { comments: incident.comments },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Get all comments for an incident
+export const getComments = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const incident = await Incident.findById(id).populate("comments.user", "name email");
+    if (!incident) {
+      return res.status(404).json({ success: false, message: "Incident not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      count: incident.comments.length,
+      data: { comments: incident.comments },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Delete a specific comment
+export const deleteComment = async (req, res) => {
+  try {
+    const { id, commentId } = req.params;
+
+    const incident = await Incident.findById(id);
+    if (!incident) {
+      return res.status(404).json({ success: false, message: "Incident not found" });
+    }
+
+    const comment = incident.comments.id(commentId);
+    if (!comment) {
+      return res.status(404).json({ success: false, message: "Comment not found" });
+    }
+
+    if (comment.user.toString() !== req.user.id) {
+      return res.status(401).json({ success: false, message: "User not authorized to delete this comment" });
+    }
+
+    comment.deleteOne();
+    await incident.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Comment deleted successfully",
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
