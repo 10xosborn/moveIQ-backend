@@ -1,9 +1,7 @@
 import mongoose from "mongoose";
 
-// incident schema
 const incidentSchema = new mongoose.Schema(
   {
-    // type of report
     type: {
       type: String,
       required: true,
@@ -11,7 +9,6 @@ const incidentSchema = new mongoose.Schema(
       enum: ["Heavy Traffic", "Roadblock", "Accident"],
     },
 
-    // location coordinates
     latitude: {
       type: Number,
       required: true,
@@ -22,22 +19,19 @@ const incidentSchema = new mongoose.Schema(
       required: true,
     },
 
-    // user who reported
     reportedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
 
-    // route related to this incident
     route: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Route",
+      default: null,
     },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
 const Incident = mongoose.model("Incident", incidentSchema);
