@@ -30,6 +30,22 @@ const incidentSchema = new mongoose.Schema(
       ref: "Route",
       default: null,
     },
+
+    
+upvotes: [
+  {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: []
+  }
+],
+downvotes: [
+  {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: []
+  }
+]
   },
   { timestamps: true }
 );

@@ -25,6 +25,13 @@ router.get("/nearby", protect, getNearbyIncidents);
 // get incidents by route
 router.get("/route/:routeId", protect, getIncidentsByRoute);
 
+// upvote incident
+router.patch("/:id/upvote", protect, upvoteIncident);
+
+// downvote incident
+router.patch("/:id/downvote", protect, downvoteIncident);
+
+
 // get single incident
 router.get("/:id", protect, getIncidentById);
 

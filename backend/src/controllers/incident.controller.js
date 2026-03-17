@@ -188,3 +188,61 @@ export const getIncidentsByRoute = async (req, res) => {
     });
   }
 };
+
+// --- Voting Functionality ---
+
+export const upvoteIncident = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id; 
+
+    const incident = await Incident.findById(id);
+    if (!incident) {
+      return res.status(404).json({ success: false, message: "Incident not found" });
+    }
+
+    
+    incident.downvotes = incident.downvotes.filter(uid => uid.toString() !== userId);
+
+    
+    const isUpvoted = incident.upvotes.includes(userId);
+    if (isUpvoted) {
+      incident.upvotes = incident.upvotes.filter(uid => uid.toString() !== userId);
+    } else {
+      incident.upvotes.push(userId);
+    }
+
+    await incident.save();
+    res.status(200).json({ success: true, data: { incident } });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const downvoteIncident = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    const incident = await Incident.findById(id);
+    if (!incident) {
+      return res.status(404).json({ success: false, message: "Incident not found" });
+    }
+
+    
+    incident.upvotes = incident.upvotes.filter(uid => uid.toString() !== userId);
+
+    
+    const isDownvoted = incident.downvotes.includes(userId);
+    if (isDownvoted) {
+      incident.downvotes = incident.downvotes.filter(uid => uid.toString() !== userId);
+    } else {
+      incident.downvotes.push(userId);
+    }
+
+    await incident.save();
+    res.status(200).json({ success: true, data: { incident } });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
