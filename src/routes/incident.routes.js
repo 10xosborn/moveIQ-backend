@@ -7,6 +7,9 @@ import {
   deleteIncident,
   getNearbyIncidents,
   getIncidentsByRoute,
+  addComment,
+  getComments,
+  deleteComment,
 } from "../controllers/incident.controller.js";
 
 import protect from "../middlewares/auth.middleware.js";
@@ -24,6 +27,15 @@ router.get("/nearby", protect, getNearbyIncidents);
 
 // get incidents by route
 router.get("/route/:routeId", protect, getIncidentsByRoute);
+
+// add comment
+router.post("/:id/comments", protect, addComment);
+
+// get comments
+router.get("/:id/comments", protect, getComments);
+
+// delete comment
+router.delete("/:id/comments/:commentId", protect, deleteComment);
 
 // get single incident
 router.get("/:id", protect, getIncidentById);

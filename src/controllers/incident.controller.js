@@ -188,3 +188,113 @@ export const getIncidentsByRoute = async (req, res) => {
     });
   }
 };
+export const addComment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { text } = req.body;
+
+    if (!text) {
+      return res.status(400).json({
+        success: false,
+        message: "Comment text is required",
+      });
+    }
+
+    const incident = await Incident.findById(id);
+    if (!incident) {
+      return res.status(404).json({
+        success: false,
+        message: "Incident not found",
+      });
+    }
+
+    incident.comments.push({
+      user: req.user.id,
+      text,
+    });
+
+    await incident.save();
+
+    return res.status(201).json({
+      success: true,
+      message: "Comment added successfully",
+      data: { comments: incident.comments },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const getComments = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const incident = await Incident.findById(id).populate(
+      "comments.user",
+      "name email"
+    );
+
+    if (!incident) {
+      return res.status(404).json({
+        success: false,
+        message: "Incident not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      count: incident.comments.length,
+      data: { comments: incident.comments },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const deleteComment = async (req, res) => {
+  try {
+    const { id, commentId } = req.params;
+
+    const incident = await Incident.findById(id);
+    if (!incident) {
+      return res.status(404).json({
+        success: false,
+        message: "Incident not found",
+      });
+    }
+
+    const comment = incident.comments.id(commentId);
+    if (!comment) {
+      return res.status(404).json({
+        success: false,
+        message: "Comment not found",
+      });
+    }
+
+    if (comment.user.toString() !== req.user.id) {
+      return res.status(401).json({
+        success: false,
+        message: "User not authorized to delete this comment",
+      });
+    }
+
+    comment.deleteOne();
+    await incident.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Comment deleted successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
