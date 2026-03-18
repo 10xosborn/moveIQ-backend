@@ -25,8 +25,6 @@ const incidentSchema = new mongoose.Schema(
       required: true,
     },
 
-    
-
     route: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Route",
@@ -34,10 +32,10 @@ const incidentSchema = new mongoose.Schema(
     },
 
     status: {
-  type: String,
-  enum: ["active", "stillThere", "cleared"],
-  default: "active",
-},
+      type: String,
+      enum: ["active", "stillThere", "cleared"],
+      default: "active",
+    },
 
     upvotes: [
       {
@@ -74,6 +72,10 @@ const incidentSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Performance indexes
+incidentSchema.index({ latitude: 1, longitude: 1 });
+incidentSchema.index({ createdAt: -1 });
 
 const Incident = mongoose.model("Incident", incidentSchema);
 

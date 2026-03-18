@@ -1,4 +1,5 @@
 import Incident from "../models/incident.model.js";
+import Activity from "../models/activity.model.js";
 
 export const createIncident = async (req, res) => {
   try {
@@ -19,13 +20,22 @@ export const createIncident = async (req, res) => {
       reportedBy: req.user.id,
     });
 
-    res.status(201).json({
+    await Activity.create({
+      user: req.user.id,
+      incident: incident._id,
+      route: incident.route,
+      action: "reported",
+      message: `${req.user.name || "A user"} reported a ${incident.type}`,
+      type: "incident",
+    });
+
+    return res.status(201).json({
       success: true,
       message: "Incident reported successfully",
       data: { incident },
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
@@ -34,15 +44,18 @@ export const createIncident = async (req, res) => {
 
 export const getIncidents = async (req, res) => {
   try {
-    const incidents = await Incident.find().populate("reportedBy", "name email");
+    const incidents = await Incident.find()
+      .populate("reportedBy", "name email")
+      .populate("route", "name startLocation endLocation")
+      .sort({ createdAt: -1 });
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       count: incidents.length,
       data: { incidents },
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
@@ -51,9 +64,10 @@ export const getIncidents = async (req, res) => {
 
 export const getIncidentById = async (req, res) => {
   try {
-    const { id } = req.params;
-
-    const incident = await Incident.findById(id).populate("reportedBy", "name email");
+    const incident = await Incident.findById(req.params.id)
+      .populate("reportedBy", "name email")
+      .populate("route", "name startLocation endLocation")
+      .populate("comments.user", "name email");
 
     if (!incident) {
       return res.status(404).json({
@@ -62,12 +76,62 @@ export const getIncidentById = async (req, res) => {
       });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       data: { incident },
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const updateIncident = async (req, res) => {
+  try {
+    const incident = await Incident.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!incident) {
+      return res.status(404).json({
+        success: false,
+        message: "Incident not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Incident updated successfully",
+      data: { incident },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const deleteIncident = async (req, res) => {
+  try {
+    const incident = await Incident.findByIdAndDelete(req.params.id);
+
+    if (!incident) {
+      return res.status(404).json({
+        success: false,
+        message: "Incident not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Incident deleted successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
@@ -93,122 +157,45 @@ export const getNearbyIncidents = async (req, res) => {
       longitude: { $gte: lng - 0.1, $lte: lng + 0.1 },
     }).populate("reportedBy", "name email");
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       count: incidents.length,
       data: { incidents },
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
-    });
-  }
-};
-
-export const updateIncident = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { type, latitude, longitude, route, status } = req.body;
-
-    const incident = await Incident.findById(id);
-
-    if (!incident) {
-      return res.status(404).json({
-        success: false,
-        message: "Incident not found",
-      });
-    }
-
-    if (incident.reportedBy.toString() !== req.user.id) {
-      return res.status(401).json({
-        success: false,
-        message: "Not authorized to update this incident",
-      });
-    }
-
-    if (type !== undefined) incident.type = type;
-    if (latitude !== undefined) incident.latitude = latitude;
-    if (longitude !== undefined) incident.longitude = longitude;
-    if (route !== undefined) incident.route = route;
-    if (status !== undefined) incident.status = status;
-
-    await incident.save();
-
-    res.status(200).json({
-      success: true,
-      message: "Incident updated successfully",
-      data: { incident },
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-export const deleteIncident = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const incident = await Incident.findById(id);
-
-    if (!incident) {
-      return res.status(404).json({
-        success: false,
-        message: "Incident not found",
-      });
-    }
-
-    if (incident.reportedBy.toString() !== req.user.id) {
-      return res.status(401).json({
-        success: false,
-        message: "Not authorized to delete this incident",
-      });
-    }
-
-    await incident.deleteOne();
-
-    res.status(200).json({
-      success: true,
-      message: "Incident deleted successfully",
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Failed to delete incident",
-      error: error.message,
     });
   }
 };
 
 export const getIncidentsByRoute = async (req, res) => {
   try {
-    const { routeId } = req.params;
-
-    const incidents = await Incident.find({ route: routeId })
+    const incidents = await Incident.find({ route: req.params.routeId })
       .populate("reportedBy", "name email")
-      .populate("route");
+      .populate("route", "name startLocation endLocation")
+      .sort({ createdAt: -1 });
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       count: incidents.length,
       data: { incidents },
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
   }
 };
+
 export const addComment = async (req, res) => {
   try {
     const { id } = req.params;
     const { text } = req.body;
 
-    if (!text) {
+    if (!text || !text.trim()) {
       return res.status(400).json({
         success: false,
         message: "Comment text is required",
@@ -225,10 +212,19 @@ export const addComment = async (req, res) => {
 
     incident.comments.push({
       user: req.user.id,
-      text,
+      text: text.trim(),
     });
 
     await incident.save();
+
+    await Activity.create({
+      user: req.user.id,
+      incident: incident._id,
+      route: incident.route,
+      action: "commented",
+      message: `${req.user.name || "A user"} commented on a ${incident.type} incident`,
+      type: "incident",
+    });
 
     return res.status(201).json({
       success: true,
@@ -293,7 +289,7 @@ export const deleteComment = async (req, res) => {
     }
 
     if (comment.user.toString() !== req.user.id) {
-      return res.status(401).json({
+      return res.status(403).json({
         success: false,
         message: "User not authorized to delete this comment",
       });
@@ -345,12 +341,12 @@ export const upvoteIncident = async (req, res) => {
 
     await incident.save();
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       data: { incident },
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
@@ -388,17 +384,18 @@ export const downvoteIncident = async (req, res) => {
 
     await incident.save();
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       data: { incident },
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
   }
 };
+
 export const markIncidentAsStillThere = async (req, res) => {
   try {
     const { id } = req.params;
@@ -415,13 +412,22 @@ export const markIncidentAsStillThere = async (req, res) => {
     incident.status = "stillThere";
     await incident.save();
 
-    res.status(200).json({
+    await Activity.create({
+      user: req.user.id,
+      incident: incident._id,
+      route: incident.route,
+      action: "stillThere",
+      message: `${req.user.name || "A user"} marked a ${incident.type} incident as still there`,
+      type: "incident",
+    });
+
+    return res.status(200).json({
       success: true,
       message: "Incident marked as still there",
       data: { incident },
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
@@ -444,13 +450,22 @@ export const markIncidentAsCleared = async (req, res) => {
     incident.status = "cleared";
     await incident.save();
 
-    res.status(200).json({
+    await Activity.create({
+      user: req.user.id,
+      incident: incident._id,
+      route: incident.route,
+      action: "cleared",
+      message: `${req.user.name || "A user"} marked a ${incident.type} incident as cleared`,
+      type: "incident",
+    });
+
+    return res.status(200).json({
       success: true,
       message: "Incident marked as cleared",
       data: { incident },
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
