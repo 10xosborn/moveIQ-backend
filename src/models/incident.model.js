@@ -25,11 +25,19 @@ const incidentSchema = new mongoose.Schema(
       required: true,
     },
 
+    
+
     route: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Route",
       default: null,
     },
+
+    status: {
+  type: String,
+  enum: ["active", "stillThere", "cleared"],
+  default: "active",
+},
 
     upvotes: [
       {

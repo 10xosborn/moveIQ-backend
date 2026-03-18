@@ -17,15 +17,6 @@ import reportRoutes from "./routes/report.routes.js";
 
 // recreate __dirname for ESM
 const __filename = fileURLToPath(import.meta.url);
-
-
-
-
-
-
-
-
-
 const __dirname = path.dirname(__filename);
 
 // load environment variables
@@ -46,8 +37,7 @@ app.use("/api/routes", routeRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/activities", activityRoutes);
 app.use("/api/reports", reportRoutes);
-app.use("/api/incidents", incidentRoutes);
-// app.use("/api/research", researchRoutes);s
+// app.use("/api/research", researchRoutes);
 
 // test route
 app.get("/", (req, res) => {

@@ -109,7 +109,7 @@ export const getNearbyIncidents = async (req, res) => {
 export const updateIncident = async (req, res) => {
   try {
     const { id } = req.params;
-    const { type, latitude, longitude, route } = req.body;
+    const { type, latitude, longitude, route, status } = req.body;
 
     const incident = await Incident.findById(id);
 
@@ -120,10 +120,18 @@ export const updateIncident = async (req, res) => {
       });
     }
 
+    if (incident.reportedBy.toString() !== req.user.id) {
+      return res.status(401).json({
+        success: false,
+        message: "Not authorized to update this incident",
+      });
+    }
+
     if (type !== undefined) incident.type = type;
     if (latitude !== undefined) incident.latitude = latitude;
     if (longitude !== undefined) incident.longitude = longitude;
     if (route !== undefined) incident.route = route;
+    if (status !== undefined) incident.status = status;
 
     await incident.save();
 
@@ -150,6 +158,13 @@ export const deleteIncident = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: "Incident not found",
+      });
+    }
+
+    if (incident.reportedBy.toString() !== req.user.id) {
+      return res.status(401).json({
+        success: false,
+        message: "Not authorized to delete this incident",
       });
     }
 
@@ -293,6 +308,149 @@ export const deleteComment = async (req, res) => {
     });
   } catch (error) {
     return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const upvoteIncident = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    const incident = await Incident.findById(id);
+    if (!incident) {
+      return res.status(404).json({
+        success: false,
+        message: "Incident not found",
+      });
+    }
+
+    incident.downvotes = incident.downvotes.filter(
+      (uid) => uid.toString() !== userId.toString()
+    );
+
+    const isUpvoted = incident.upvotes.some(
+      (uid) => uid.toString() === userId.toString()
+    );
+
+    if (isUpvoted) {
+      incident.upvotes = incident.upvotes.filter(
+        (uid) => uid.toString() !== userId.toString()
+      );
+    } else {
+      incident.upvotes.push(userId);
+    }
+
+    await incident.save();
+
+    res.status(200).json({
+      success: true,
+      data: { incident },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const downvoteIncident = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    const incident = await Incident.findById(id);
+    if (!incident) {
+      return res.status(404).json({
+        success: false,
+        message: "Incident not found",
+      });
+    }
+
+    incident.upvotes = incident.upvotes.filter(
+      (uid) => uid.toString() !== userId.toString()
+    );
+
+    const isDownvoted = incident.downvotes.some(
+      (uid) => uid.toString() === userId.toString()
+    );
+
+    if (isDownvoted) {
+      incident.downvotes = incident.downvotes.filter(
+        (uid) => uid.toString() !== userId.toString()
+      );
+    } else {
+      incident.downvotes.push(userId);
+    }
+
+    await incident.save();
+
+    res.status(200).json({
+      success: true,
+      data: { incident },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+export const markIncidentAsStillThere = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const incident = await Incident.findById(id);
+
+    if (!incident) {
+      return res.status(404).json({
+        success: false,
+        message: "Incident not found",
+      });
+    }
+
+    incident.status = "stillThere";
+    await incident.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Incident marked as still there",
+      data: { incident },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const markIncidentAsCleared = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const incident = await Incident.findById(id);
+
+    if (!incident) {
+      return res.status(404).json({
+        success: false,
+        message: "Incident not found",
+      });
+    }
+
+    incident.status = "cleared";
+    await incident.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Incident marked as cleared",
+      data: { incident },
+    });
+  } catch (error) {
+    res.status(500).json({
       success: false,
       message: error.message,
     });

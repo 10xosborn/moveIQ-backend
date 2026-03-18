@@ -19,8 +19,6 @@ export const getNotifications = async (req, res) => {
   }
 };
 
-
-// mark notification as read
 export const markNotificationAsRead = async (req, res) => {
   try {
     const notification = await Notification.findById(req.params.id);
@@ -29,6 +27,13 @@ export const markNotificationAsRead = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: "Notification not found",
+      });
+    }
+
+    if (notification.user.toString() !== req.user.id) {
+      return res.status(401).json({
+        success: false,
+        message: "Not authorized to update this notification",
       });
     }
 

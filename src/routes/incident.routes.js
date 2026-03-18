@@ -10,6 +10,10 @@ import {
   addComment,
   getComments,
   deleteComment,
+  upvoteIncident,
+  downvoteIncident,
+  markIncidentAsStillThere,
+  markIncidentAsCleared,
 } from "../controllers/incident.controller.js";
 
 import protect from "../middlewares/auth.middleware.js";
@@ -36,6 +40,14 @@ router.get("/:id/comments", protect, getComments);
 
 // delete comment
 router.delete("/:id/comments/:commentId", protect, deleteComment);
+
+// votes
+router.patch("/:id/upvote", protect, upvoteIncident);
+router.patch("/:id/downvote", protect, downvoteIncident);
+
+// incident status
+router.patch("/:id/still-there", protect, markIncidentAsStillThere);
+router.patch("/:id/cleared", protect, markIncidentAsCleared);
 
 // get single incident
 router.get("/:id", protect, getIncidentById);
