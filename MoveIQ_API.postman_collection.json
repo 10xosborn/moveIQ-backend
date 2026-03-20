@@ -1,0 +1,1134 @@
+{
+	"info": {
+		"_postman_id": "moveiq-backend-api-collection",
+		"name": "MoveIQ API",
+		"description": "Complete API collection for the MoveIQ Backend — a real-time traffic and incident reporting platform for Lagos routes.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5000/api",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Auth",
+			"description": "Authentication endpoints: register, login, profile, password reset.",
+			"item": [
+				{
+					"name": "Register",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    pm.collectionVariables.set(\"token\", pm.response.json().data.token);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"johndoe@moveiq.com\",\n  \"phone\": \"08012345678\",\n  \"password\": \"securePass123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/register",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "register"]
+						},
+						"description": "Register a new user. Requires name, password, and at least one of email or phone."
+					},
+					"response": [
+						{
+							"name": "201 - User Registered",
+							"status": "Created",
+							"code": 201,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n  \"success\": true,\n  \"message\": \"User registered successfully\",\n  \"data\": {\n    \"user\": {\n      \"id\": \"665f1a2b3c4d5e6f7a8b9c0d\",\n      \"name\": \"John Doe\",\n      \"email\": \"johndoe@moveiq.com\",\n      \"phone\": \"08012345678\"\n    },\n    \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    pm.collectionVariables.set(\"token\", pm.response.json().data.token);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"johndoe@moveiq.com\",\n  \"password\": \"securePass123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "login"]
+						},
+						"description": "Login with email/phone and password. Returns JWT token."
+					},
+					"response": [
+						{
+							"name": "200 - Login Successful",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Login successful\",\n  \"data\": {\n    \"user\": {\n      \"id\": \"665f1a2b3c4d5e6f7a8b9c0d\",\n      \"name\": \"John Doe\",\n      \"email\": \"johndoe@moveiq.com\",\n      \"phone\": \"08012345678\"\n    },\n    \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Current User",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/auth/current-user",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "current-user"]
+						},
+						"description": "Get the currently authenticated user's profile."
+					},
+					"response": [
+						{
+							"name": "200 - Current User",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Success\",\n  \"data\": {\n    \"user\": {\n      \"_id\": \"665f1a2b3c4d5e6f7a8b9c0d\",\n      \"name\": \"John Doe\",\n      \"email\": \"johndoe@moveiq.com\",\n      \"phone\": \"08012345678\",\n      \"createdAt\": \"2026-03-20T10:30:00.000Z\",\n      \"updatedAt\": \"2026-03-20T10:30:00.000Z\"\n    }\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Update Profile",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"John Updated\",\n  \"email\": \"john.updated@moveiq.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/profile",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "profile"]
+						},
+						"description": "Update the authenticated user's profile. At least one field required."
+					},
+					"response": [
+						{
+							"name": "200 - Profile Updated",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Profile updated successfully\",\n  \"data\": {\n    \"user\": {\n      \"id\": \"665f1a2b3c4d5e6f7a8b9c0d\",\n      \"name\": \"John Updated\",\n      \"email\": \"john.updated@moveiq.com\",\n      \"phone\": \"08012345678\"\n    }\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/auth/logout",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "logout"]
+						},
+						"description": "Logout the current user."
+					},
+					"response": [
+						{
+							"name": "200 - Logout",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Logout successful\",\n  \"data\": null\n}"
+						}
+					]
+				},
+				{
+					"name": "Forgot Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"johndoe@moveiq.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/forgot-password",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "forgot-password"]
+						},
+						"description": "Request a password reset token. Provide email or phone."
+					},
+					"response": [
+						{
+							"name": "200 - Reset Token Generated",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Reset token generated successfully\",\n  \"data\": {\n    \"resetToken\": \"a1b2c3d4e5f6789012345678abcdef90abcdef1234567890abcdef1234567890ab\"\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Reset Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"password\": \"newSecurePass456\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/reset-password/:token",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "reset-password", ":token"],
+							"variable": [
+								{
+									"key": "token",
+									"value": "a1b2c3d4e5f6789012345678abcdef90abcdef1234567890abcdef1234567890ab",
+									"description": "Password reset token from forgot-password response"
+								}
+							]
+						},
+						"description": "Reset password using the token received from forgot-password."
+					},
+					"response": [
+						{
+							"name": "200 - Password Reset",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Password reset successful\",\n  \"data\": null\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Routes",
+			"description": "Route management: CRUD, search, history, and incident lookup.",
+			"item": [
+				{
+					"name": "Create Route",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Lekki to Victoria Island\",\n  \"startLocation\": \"Lekki Phase 1\",\n  \"endLocation\": \"Victoria Island\",\n  \"distance\": 12,\n  \"estimatedDuration\": 25\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/routes",
+							"host": ["{{baseUrl}}"],
+							"path": ["routes"]
+						},
+						"description": "Create a new route. Slug is auto-generated from the name."
+					},
+					"response": [
+						{
+							"name": "201 - Route Created",
+							"status": "Created",
+							"code": 201,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Route saved successfully\",\n  \"data\": {\n    \"route\": {\n      \"_id\": \"665f2a3b4c5d6e7f8a9b0c1d\",\n      \"name\": \"Lekki to Victoria Island\",\n      \"slug\": \"lekki-to-victoria-island\",\n      \"startLocation\": \"Lekki Phase 1\",\n      \"endLocation\": \"Victoria Island\",\n      \"distance\": 12,\n      \"estimatedDuration\": 25,\n      \"junctions\": [],\n      \"status\": \"GREEN\",\n      \"createdBy\": \"665f1a2b3c4d5e6f7a8b9c0d\",\n      \"createdAt\": \"2026-03-20T12:00:00.000Z\",\n      \"updatedAt\": \"2026-03-20T12:00:00.000Z\"\n    }\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get All Routes",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/routes",
+							"host": ["{{baseUrl}}"],
+							"path": ["routes"]
+						},
+						"description": "Get all available routes sorted by newest first."
+					},
+					"response": [
+						{
+							"name": "200 - All Routes",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Success\",\n  \"data\": {\n    \"routes\": [\n      {\n        \"_id\": \"665f2a3b4c5d6e7f8a9b0c1d\",\n        \"name\": \"Third Mainland Bridge\",\n        \"slug\": \"third-mainland-bridge\",\n        \"startLocation\": \"Oworo\",\n        \"endLocation\": \"Adeniji\",\n        \"status\": \"GREEN\",\n        \"junctions\": []\n      }\n    ],\n    \"count\": 10\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Single Route",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/routes/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["routes", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "665f2a3b4c5d6e7f8a9b0c1d",
+									"description": "Route ID"
+								}
+							]
+						},
+						"description": "Get a single route by its ID."
+					},
+					"response": [
+						{
+							"name": "200 - Single Route",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Success\",\n  \"data\": {\n    \"route\": {\n      \"_id\": \"665f2a3b4c5d6e7f8a9b0c1d\",\n      \"name\": \"Third Mainland Bridge\",\n      \"slug\": \"third-mainland-bridge\",\n      \"startLocation\": \"Oworo\",\n      \"endLocation\": \"Adeniji\",\n      \"distance\": 11,\n      \"estimatedDuration\": 30,\n      \"status\": \"GREEN\",\n      \"junctions\": []\n    }\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Delete Route",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/routes/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["routes", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "665f2a3b4c5d6e7f8a9b0c1d",
+									"description": "Route ID"
+								}
+							]
+						},
+						"description": "Delete a route by its ID. Requires authentication."
+					},
+					"response": [
+						{
+							"name": "200 - Route Deleted",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Route deleted successfully\",\n  \"data\": {\n    \"route\": {\n      \"_id\": \"665f2a3b4c5d6e7f8a9b0c1d\",\n      \"name\": \"Third Mainland Bridge\"\n    }\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Search Routes",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/routes/search?q=Lekki",
+							"host": ["{{baseUrl}}"],
+							"path": ["routes", "search"],
+							"query": [
+								{
+									"key": "q",
+									"value": "Lekki",
+									"description": "Search query (searches name, startLocation, endLocation)"
+								}
+							]
+						},
+						"description": "Search routes by name, start location, or end location."
+					},
+					"response": [
+						{
+							"name": "200 - Search Results",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Success\",\n  \"data\": {\n    \"routes\": [\n      {\n        \"_id\": \"665f2a3b4c5d6e7f8a9b0c1e\",\n        \"name\": \"Lekki-Epe Expressway\",\n        \"startLocation\": \"Lekki Toll\",\n        \"endLocation\": \"Epe\",\n        \"status\": \"GREEN\"\n      }\n    ],\n    \"count\": 2\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Route Details",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/routes/:id/details",
+							"host": ["{{baseUrl}}"],
+							"path": ["routes", ":id", "details"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "665f2a3b4c5d6e7f8a9b0c1d",
+									"description": "Route ID"
+								}
+							]
+						},
+						"description": "Get route details with populated createdBy user info."
+					},
+					"response": [
+						{
+							"name": "200 - Route Details",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Success\",\n  \"data\": {\n    \"route\": {\n      \"_id\": \"665f2a3b4c5d6e7f8a9b0c1d\",\n      \"name\": \"Third Mainland Bridge\",\n      \"slug\": \"third-mainland-bridge\",\n      \"startLocation\": \"Oworo\",\n      \"endLocation\": \"Adeniji\",\n      \"status\": \"GREEN\",\n      \"createdBy\": {\n        \"_id\": \"665f1a2b3c4d5e6f7a8b9c0d\",\n        \"name\": \"John Doe\",\n        \"email\": \"johndoe@moveiq.com\"\n      }\n    }\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Route History",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/routes/history",
+							"host": ["{{baseUrl}}"],
+							"path": ["routes", "history"]
+						},
+						"description": "Get all routes sorted by newest first (route history)."
+					},
+					"response": [
+						{
+							"name": "200 - Route History",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Success\",\n  \"data\": {\n    \"routes\": [\n      {\n        \"_id\": \"665f2a3b4c5d6e7f8a9b0c1d\",\n        \"name\": \"Third Mainland Bridge\",\n        \"startLocation\": \"Oworo\",\n        \"endLocation\": \"Adeniji\",\n        \"status\": \"GREEN\"\n      }\n    ],\n    \"count\": 10\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Route Incidents",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/routes/:id/incidents",
+							"host": ["{{baseUrl}}"],
+							"path": ["routes", ":id", "incidents"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "665f2a3b4c5d6e7f8a9b0c1d",
+									"description": "Route ID"
+								}
+							]
+						},
+						"description": "Get all incidents associated with a specific route."
+					},
+					"response": [
+						{
+							"name": "200 - Route Incidents",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Success\",\n  \"data\": {\n    \"incidents\": [\n      {\n        \"_id\": \"665f3a4b5c6d7e8f9a0b1c2d\",\n        \"type\": \"Heavy Traffic\",\n        \"latitude\": 6.4541,\n        \"longitude\": 3.4218,\n        \"status\": \"active\",\n        \"reportedBy\": {\n          \"name\": \"John Doe\",\n          \"email\": \"johndoe@moveiq.com\"\n        }\n      }\n    ],\n    \"count\": 1\n  }\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Incidents",
+			"description": "Incident reporting, voting, comments, and status management.",
+			"item": [
+				{
+					"name": "Create Incident",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"type\": \"Heavy Traffic\",\n  \"latitude\": 6.4541,\n  \"longitude\": 3.4218,\n  \"route\": \"665f2a3b4c5d6e7f8a9b0c1d\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/incidents",
+							"host": ["{{baseUrl}}"],
+							"path": ["incidents"]
+						},
+						"description": "Report a new incident. Valid types: Heavy Traffic, Roadblock, Accident."
+					},
+					"response": [
+						{
+							"name": "201 - Incident Created",
+							"status": "Created",
+							"code": 201,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Incident reported successfully\",\n  \"data\": {\n    \"incident\": {\n      \"_id\": \"665f3a4b5c6d7e8f9a0b1c2d\",\n      \"type\": \"Heavy Traffic\",\n      \"latitude\": 6.4541,\n      \"longitude\": 3.4218,\n      \"reportedBy\": \"665f1a2b3c4d5e6f7a8b9c0d\",\n      \"route\": \"665f2a3b4c5d6e7f8a9b0c1d\",\n      \"status\": \"active\",\n      \"upvotes\": [],\n      \"downvotes\": [],\n      \"comments\": [],\n      \"expiresAt\": \"2026-03-20T14:00:00.000Z\",\n      \"createdAt\": \"2026-03-20T12:00:00.000Z\"\n    }\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get All Incidents",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/incidents",
+							"host": ["{{baseUrl}}"],
+							"path": ["incidents"]
+						},
+						"description": "Get all incidents sorted by newest first."
+					},
+					"response": [
+						{
+							"name": "200 - All Incidents",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Success\",\n  \"data\": {\n    \"incidents\": [\n      {\n        \"_id\": \"665f3a4b5c6d7e8f9a0b1c2d\",\n        \"type\": \"Heavy Traffic\",\n        \"latitude\": 6.4541,\n        \"longitude\": 3.4218,\n        \"status\": \"active\",\n        \"reportedBy\": {\n          \"_id\": \"665f1a2b3c4d5e6f7a8b9c0d\",\n          \"name\": \"John Doe\",\n          \"email\": \"johndoe@moveiq.com\"\n        },\n        \"upvotes\": [],\n        \"downvotes\": []\n      }\n    ],\n    \"count\": 1\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Incident By ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/incidents/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["incidents", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "665f3a4b5c6d7e8f9a0b1c2d",
+									"description": "Incident ID"
+								}
+							]
+						},
+						"description": "Get a single incident by its ID with populated reporter."
+					},
+					"response": [
+						{
+							"name": "200 - Single Incident",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Success\",\n  \"data\": {\n    \"incident\": {\n      \"_id\": \"665f3a4b5c6d7e8f9a0b1c2d\",\n      \"type\": \"Heavy Traffic\",\n      \"latitude\": 6.4541,\n      \"longitude\": 3.4218,\n      \"status\": \"active\",\n      \"reportedBy\": {\n        \"_id\": \"665f1a2b3c4d5e6f7a8b9c0d\",\n        \"name\": \"John Doe\",\n        \"email\": \"johndoe@moveiq.com\"\n      }\n    }\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Update Incident",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"type\": \"Accident\",\n  \"latitude\": 6.4600,\n  \"longitude\": 3.4300\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/incidents/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["incidents", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "665f3a4b5c6d7e8f9a0b1c2d",
+									"description": "Incident ID"
+								}
+							]
+						},
+						"description": "Update an existing incident. At least one field required."
+					},
+					"response": [
+						{
+							"name": "200 - Incident Updated",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Incident updated successfully\",\n  \"data\": {\n    \"incident\": {\n      \"_id\": \"665f3a4b5c6d7e8f9a0b1c2d\",\n      \"type\": \"Accident\",\n      \"latitude\": 6.46,\n      \"longitude\": 3.43,\n      \"status\": \"active\"\n    }\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Delete Incident",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/incidents/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["incidents", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "665f3a4b5c6d7e8f9a0b1c2d",
+									"description": "Incident ID"
+								}
+							]
+						},
+						"description": "Delete an incident by its ID."
+					},
+					"response": [
+						{
+							"name": "200 - Incident Deleted",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Incident deleted successfully\",\n  \"data\": null\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Nearby Incidents",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/incidents/nearby?latitude=6.45&longitude=3.42",
+							"host": ["{{baseUrl}}"],
+							"path": ["incidents", "nearby"],
+							"query": [
+								{
+									"key": "latitude",
+									"value": "6.45",
+									"description": "Latitude coordinate"
+								},
+								{
+									"key": "longitude",
+									"value": "3.42",
+									"description": "Longitude coordinate"
+								}
+							]
+						},
+						"description": "Get incidents near a specific location (range ±0.1 degrees)."
+					},
+					"response": [
+						{
+							"name": "200 - Nearby Incidents",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Success\",\n  \"data\": {\n    \"incidents\": [\n      {\n        \"_id\": \"665f3a4b5c6d7e8f9a0b1c2d\",\n        \"type\": \"Heavy Traffic\",\n        \"latitude\": 6.4541,\n        \"longitude\": 3.4218,\n        \"status\": \"active\",\n        \"reportedBy\": {\n          \"name\": \"John Doe\",\n          \"email\": \"johndoe@moveiq.com\"\n        }\n      }\n    ],\n    \"count\": 1\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Incidents By Route",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/incidents/route/:routeId",
+							"host": ["{{baseUrl}}"],
+							"path": ["incidents", "route", ":routeId"],
+							"variable": [
+								{
+									"key": "routeId",
+									"value": "665f2a3b4c5d6e7f8a9b0c1d",
+									"description": "Route ID"
+								}
+							]
+						},
+						"description": "Get all incidents linked to a specific route."
+					},
+					"response": [
+						{
+							"name": "200 - Incidents By Route",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Success\",\n  \"data\": {\n    \"incidents\": [],\n    \"count\": 0\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Upvote Incident",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/incidents/:id/upvote",
+							"host": ["{{baseUrl}}"],
+							"path": ["incidents", ":id", "upvote"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "665f3a4b5c6d7e8f9a0b1c2d",
+									"description": "Incident ID"
+								}
+							]
+						},
+						"description": "Upvote an incident. Toggles upvote and removes any existing downvote."
+					},
+					"response": [
+						{
+							"name": "200 - Upvoted",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Success\",\n  \"data\": {\n    \"incident\": {\n      \"_id\": \"665f3a4b5c6d7e8f9a0b1c2d\",\n      \"upvotes\": [\"665f1a2b3c4d5e6f7a8b9c0d\"],\n      \"downvotes\": []\n    }\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Downvote Incident",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/incidents/:id/downvote",
+							"host": ["{{baseUrl}}"],
+							"path": ["incidents", ":id", "downvote"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "665f3a4b5c6d7e8f9a0b1c2d",
+									"description": "Incident ID"
+								}
+							]
+						},
+						"description": "Downvote an incident. Toggles downvote and removes any existing upvote."
+					},
+					"response": [
+						{
+							"name": "200 - Downvoted",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Success\",\n  \"data\": {\n    \"incident\": {\n      \"_id\": \"665f3a4b5c6d7e8f9a0b1c2d\",\n      \"upvotes\": [],\n      \"downvotes\": [\"665f1a2b3c4d5e6f7a8b9c0d\"]\n    }\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Mark Still There",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/incidents/:id/still-there",
+							"host": ["{{baseUrl}}"],
+							"path": ["incidents", ":id", "still-there"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "665f3a4b5c6d7e8f9a0b1c2d",
+									"description": "Incident ID"
+								}
+							]
+						},
+						"description": "Mark an incident as still active and extend its expiry by 2 hours."
+					},
+					"response": [
+						{
+							"name": "200 - Still There",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Incident marked as still there\",\n  \"data\": {\n    \"incident\": {\n      \"_id\": \"665f3a4b5c6d7e8f9a0b1c2d\",\n      \"status\": \"active\",\n      \"expiresAt\": \"2026-03-20T16:00:00.000Z\"\n    }\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Mark Cleared",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/incidents/:id/cleared",
+							"host": ["{{baseUrl}}"],
+							"path": ["incidents", ":id", "cleared"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "665f3a4b5c6d7e8f9a0b1c2d",
+									"description": "Incident ID"
+								}
+							]
+						},
+						"description": "Mark an incident as cleared (no longer active)."
+					},
+					"response": [
+						{
+							"name": "200 - Cleared",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Incident marked as cleared\",\n  \"data\": {\n    \"incident\": {\n      \"_id\": \"665f3a4b5c6d7e8f9a0b1c2d\",\n      \"status\": \"cleared\"\n    }\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Add Comment",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"text\": \"Very bad traffic here, avoid if possible!\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/incidents/:id/comments",
+							"host": ["{{baseUrl}}"],
+							"path": ["incidents", ":id", "comments"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "665f3a4b5c6d7e8f9a0b1c2d",
+									"description": "Incident ID"
+								}
+							]
+						},
+						"description": "Add a comment to an incident."
+					},
+					"response": [
+						{
+							"name": "201 - Comment Added",
+							"status": "Created",
+							"code": 201,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Comment added successfully\",\n  \"data\": {\n    \"comments\": [\n      {\n        \"user\": \"665f1a2b3c4d5e6f7a8b9c0d\",\n        \"text\": \"Very bad traffic here, avoid if possible!\",\n        \"_id\": \"665f4a5b6c7d8e9f0a1b2c3d\",\n        \"createdAt\": \"2026-03-20T12:30:00.000Z\"\n      }\n    ]\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Comments",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/incidents/:id/comments",
+							"host": ["{{baseUrl}}"],
+							"path": ["incidents", ":id", "comments"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "665f3a4b5c6d7e8f9a0b1c2d",
+									"description": "Incident ID"
+								}
+							]
+						},
+						"description": "Get all comments for an incident with populated user info."
+					},
+					"response": [
+						{
+							"name": "200 - Comments",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Success\",\n  \"data\": {\n    \"comments\": [\n      {\n        \"user\": {\n          \"_id\": \"665f1a2b3c4d5e6f7a8b9c0d\",\n          \"name\": \"John Doe\",\n          \"email\": \"johndoe@moveiq.com\"\n        },\n        \"text\": \"Very bad traffic here, avoid if possible!\",\n        \"_id\": \"665f4a5b6c7d8e9f0a1b2c3d\",\n        \"createdAt\": \"2026-03-20T12:30:00.000Z\"\n      }\n    ],\n    \"count\": 1\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Delete Comment",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/incidents/:id/comments/:commentId",
+							"host": ["{{baseUrl}}"],
+							"path": ["incidents", ":id", "comments", ":commentId"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "665f3a4b5c6d7e8f9a0b1c2d",
+									"description": "Incident ID"
+								},
+								{
+									"key": "commentId",
+									"value": "665f4a5b6c7d8e9f0a1b2c3d",
+									"description": "Comment ID"
+								}
+							]
+						},
+						"description": "Delete a comment. Only the comment author can delete it."
+					},
+					"response": [
+						{
+							"name": "200 - Comment Deleted",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Comment deleted successfully\",\n  \"data\": null\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Notifications",
+			"description": "User notification management.",
+			"item": [
+				{
+					"name": "Get Notifications",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/notifications",
+							"host": ["{{baseUrl}}"],
+							"path": ["notifications"]
+						},
+						"description": "Get all notifications for the authenticated user."
+					},
+					"response": [
+						{
+							"name": "200 - Notifications",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Success\",\n  \"data\": {\n    \"notifications\": [\n      {\n        \"_id\": \"665f5a6b7c8d9e0f1a2b3c4d\",\n        \"user\": \"665f1a2b3c4d5e6f7a8b9c0d\",\n        \"type\": \"incident\",\n        \"message\": \"New incident reported on your route\",\n        \"isRead\": false,\n        \"createdAt\": \"2026-03-20T13:00:00.000Z\"\n      }\n    ],\n    \"count\": 1\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Mark Notification as Read",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/notifications/:id/read",
+							"host": ["{{baseUrl}}"],
+							"path": ["notifications", ":id", "read"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "665f5a6b7c8d9e0f1a2b3c4d",
+									"description": "Notification ID"
+								}
+							]
+						},
+						"description": "Mark a specific notification as read."
+					},
+					"response": [
+						{
+							"name": "200 - Marked as Read",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Notification marked as read\",\n  \"data\": {\n    \"notification\": {\n      \"_id\": \"665f5a6b7c8d9e0f1a2b3c4d\",\n      \"user\": \"665f1a2b3c4d5e6f7a8b9c0d\",\n      \"type\": \"incident\",\n      \"message\": \"New incident reported on your route\",\n      \"isRead\": true\n    }\n  }\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Activity",
+			"description": "Activity feed combining recent incidents and routes.",
+			"item": [
+				{
+					"name": "Get Activities Feed",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/activities",
+							"host": ["{{baseUrl}}"],
+							"path": ["activities"]
+						},
+						"description": "Get a combined activity feed of recent incidents and routes."
+					},
+					"response": [
+						{
+							"name": "200 - Activities Feed",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Success\",\n  \"data\": {\n    \"activities\": [\n      {\n        \"type\": \"incident\",\n        \"message\": \"John Doe reported a Heavy Traffic\",\n        \"data\": {\n          \"_id\": \"665f3a4b5c6d7e8f9a0b1c2d\",\n          \"type\": \"Heavy Traffic\",\n          \"latitude\": 6.4541,\n          \"longitude\": 3.4218\n        },\n        \"createdAt\": \"2026-03-20T12:00:00.000Z\"\n      },\n      {\n        \"type\": \"route\",\n        \"message\": \"John Doe saved route Third Mainland Bridge\",\n        \"data\": {\n          \"_id\": \"665f2a3b4c5d6e7f8a9b0c1d\",\n          \"name\": \"Third Mainland Bridge\"\n        },\n        \"createdAt\": \"2026-03-20T11:00:00.000Z\"\n      }\n    ],\n    \"count\": 2\n  }\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Reports",
+			"description": "Reports feed listing recent incident reports.",
+			"item": [
+				{
+					"name": "Get Reports Feed",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/reports/feed",
+							"host": ["{{baseUrl}}"],
+							"path": ["reports", "feed"]
+						},
+						"description": "Get the latest 20 incident reports."
+					},
+					"response": [
+						{
+							"name": "200 - Reports Feed",
+							"status": "OK",
+							"code": 200,
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Success\",\n  \"data\": {\n    \"reports\": [\n      {\n        \"_id\": \"665f3a4b5c6d7e8f9a0b1c2d\",\n        \"type\": \"Heavy Traffic\",\n        \"latitude\": 6.4541,\n        \"longitude\": 3.4218,\n        \"status\": \"active\",\n        \"reportedBy\": {\n          \"_id\": \"665f1a2b3c4d5e6f7a8b9c0d\",\n          \"name\": \"John Doe\",\n          \"email\": \"johndoe@moveiq.com\"\n        },\n        \"createdAt\": \"2026-03-20T12:00:00.000Z\"\n      }\n    ],\n    \"count\": 1\n  }\n}"
+						}
+					]
+				}
+			]
+		}
+	]
+}
