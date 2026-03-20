@@ -1,44 +1,17 @@
-import jwt from "jsonwebtoken";
-import User from "../models/user.model.js";
+/**
+ * Joi validation middleware.
+ * Usage: router.post("/register", validate(registerSchema), register);
+ */
+export const validate = (schema) => (req, res, next) => {
+  const { error } = schema.validate(req.body, { abortEarly: false });
 
-const protect = async (req, res, next) => {
-  try {
-    let token;
-
-    if (
-      req.headers.authorization &&
-      req.headers.authorization.startsWith("Bearer ")
-    ) {
-      token = req.headers.authorization.split(" ")[1];
-    }
-
-    if (!token) {
-      return res.status(401).json({
-        success: false,
-        message: "Not authorized, no token provided",
-      });
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    const user = await User.findById(decoded.id).select("-password");
-
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: "Not authorized, user not found",
-      });
-    }
-
-    req.user = user;
-    next();
-  } catch (error) {
-    return res.status(401).json({
+  if (error) {
+    return res.status(400).json({
       success: false,
-      message: "Not authorized, token failed",
-      error: error.message,
+      message: "Validation failed",
+      errors: error.details.map((detail) => detail.message),
     });
   }
-};
 
-export default protect;
+  next();
+};

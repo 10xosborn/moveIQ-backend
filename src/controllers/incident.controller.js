@@ -1,473 +1,123 @@
-import Incident from "../models/incident.model.js";
-import Activity from "../models/activity.model.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { successResponse } from "../utils/apiResponse.js";
+import { ApiError } from "../utils/apiError.js";
+import {
+  createIncidentService,
+  getAllIncidentsService,
+  getIncidentByIdService,
+  getNearbyIncidentsService,
+  getIncidentsByRouteService,
+  updateIncidentService,
+  deleteIncidentService,
+  upvoteIncidentService,
+  downvoteIncidentService,
+  addCommentService,
+  getCommentsService,
+  deleteCommentService,
+  markStillThereService,
+  markClearedService,
+} from "../services/incident.service.js";
 
-export const createIncident = async (req, res) => {
-  try {
-    const { type, latitude, longitude, route } = req.body;
+// POST /api/incidents
+export const createIncident = asyncHandler(async (req, res) => {
+  const { type, latitude, longitude, route } = req.body;
+  const incident = await createIncidentService({
+    type,
+    latitude,
+    longitude,
+    route,
+    reportedBy: req.user.id,
+  });
+  return successResponse(res, { incident }, "Incident reported successfully", 201);
+});
 
-    if (!type || latitude === undefined || longitude === undefined) {
-      return res.status(400).json({
-        success: false,
-        message: "Type, latitude and longitude are required",
-      });
-    }
+// GET /api/incidents
+export const getIncidents = asyncHandler(async (req, res) => {
+  const incidents = await getAllIncidentsService();
+  return successResponse(res, { incidents, count: incidents.length });
+});
 
-    const incident = await Incident.create({
-      type,
-      latitude,
-      longitude,
-      route,
-      reportedBy: req.user.id,
-    });
+// GET /api/incidents/:id
+export const getIncidentById = asyncHandler(async (req, res) => {
+  const incident = await getIncidentByIdService(req.params.id);
+  return successResponse(res, { incident });
+});
 
-    await Activity.create({
-      user: req.user.id,
-      incident: incident._id,
-      route: incident.route,
-      action: "reported",
-      message: `${req.user.name || "A user"} reported a ${incident.type}`,
-      type: "incident",
-    });
+// GET /api/incidents/nearby?latitude=...&longitude=...
+export const getNearbyIncidents = asyncHandler(async (req, res) => {
+  const { latitude, longitude } = req.query;
 
-    return res.status(201).json({
-      success: true,
-      message: "Incident reported successfully",
-      data: { incident },
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+  if (latitude === undefined || longitude === undefined) {
+    throw new ApiError("Latitude and longitude are required", 400);
   }
-};
 
-export const getIncidents = async (req, res) => {
-  try {
-    const incidents = await Incident.find()
-      .populate("reportedBy", "name email")
-      .populate("route", "name startLocation endLocation")
-      .sort({ createdAt: -1 });
+  const incidents = await getNearbyIncidentsService(
+    Number(latitude),
+    Number(longitude)
+  );
+  return successResponse(res, { incidents, count: incidents.length });
+});
 
-    return res.status(200).json({
-      success: true,
-      count: incidents.length,
-      data: { incidents },
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
+// GET /api/incidents/route/:routeId
+export const getIncidentsByRoute = asyncHandler(async (req, res) => {
+  const incidents = await getIncidentsByRouteService(req.params.routeId);
+  return successResponse(res, { incidents, count: incidents.length });
+});
 
-export const getIncidentById = async (req, res) => {
-  try {
-    const incident = await Incident.findById(req.params.id)
-      .populate("reportedBy", "name email")
-      .populate("route", "name startLocation endLocation")
-      .populate("comments.user", "name email");
+// PUT /api/incidents/:id
+export const updateIncident = asyncHandler(async (req, res) => {
+  const incident = await updateIncidentService(req.params.id, req.body);
+  return successResponse(res, { incident }, "Incident updated successfully");
+});
 
-    if (!incident) {
-      return res.status(404).json({
-        success: false,
-        message: "Incident not found",
-      });
-    }
+// DELETE /api/incidents/:id
+export const deleteIncident = asyncHandler(async (req, res) => {
+  await deleteIncidentService(req.params.id);
+  return successResponse(res, null, "Incident deleted successfully");
+});
 
-    return res.status(200).json({
-      success: true,
-      data: { incident },
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
+// PATCH /api/incidents/:id/upvote
+export const upvoteIncident = asyncHandler(async (req, res) => {
+  const incident = await upvoteIncidentService(req.params.id, req.user.id);
+  return successResponse(res, { incident });
+});
 
-export const updateIncident = async (req, res) => {
-  try {
-    const incident = await Incident.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
+// PATCH /api/incidents/:id/downvote
+export const downvoteIncident = asyncHandler(async (req, res) => {
+  const incident = await downvoteIncidentService(req.params.id, req.user.id);
+  return successResponse(res, { incident });
+});
 
-    if (!incident) {
-      return res.status(404).json({
-        success: false,
-        message: "Incident not found",
-      });
-    }
+// PATCH /api/incidents/:id/still-there
+export const markStillThere = asyncHandler(async (req, res) => {
+  const incident = await markStillThereService(req.params.id);
+  return successResponse(res, { incident }, "Incident marked as still there");
+});
 
-    return res.status(200).json({
-      success: true,
-      message: "Incident updated successfully",
-      data: { incident },
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
+// PATCH /api/incidents/:id/cleared
+export const markCleared = asyncHandler(async (req, res) => {
+  const incident = await markClearedService(req.params.id);
+  return successResponse(res, { incident }, "Incident marked as cleared");
+});
 
-export const deleteIncident = async (req, res) => {
-  try {
-    const incident = await Incident.findByIdAndDelete(req.params.id);
+// POST /api/incidents/:id/comments
+export const addComment = asyncHandler(async (req, res) => {
+  const comments = await addCommentService(
+    req.params.id,
+    req.user.id,
+    req.body.text
+  );
+  return successResponse(res, { comments }, "Comment added successfully", 201);
+});
 
-    if (!incident) {
-      return res.status(404).json({
-        success: false,
-        message: "Incident not found",
-      });
-    }
+// GET /api/incidents/:id/comments
+export const getComments = asyncHandler(async (req, res) => {
+  const comments = await getCommentsService(req.params.id);
+  return successResponse(res, { comments, count: comments.length });
+});
 
-    return res.status(200).json({
-      success: true,
-      message: "Incident deleted successfully",
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-export const getNearbyIncidents = async (req, res) => {
-  try {
-    const { latitude, longitude } = req.query;
-
-    if (latitude === undefined || longitude === undefined) {
-      return res.status(400).json({
-        success: false,
-        message: "Latitude and longitude are required",
-      });
-    }
-
-    const lat = Number(latitude);
-    const lng = Number(longitude);
-
-    const incidents = await Incident.find({
-      latitude: { $gte: lat - 0.1, $lte: lat + 0.1 },
-      longitude: { $gte: lng - 0.1, $lte: lng + 0.1 },
-    }).populate("reportedBy", "name email");
-
-    return res.status(200).json({
-      success: true,
-      count: incidents.length,
-      data: { incidents },
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-export const getIncidentsByRoute = async (req, res) => {
-  try {
-    const incidents = await Incident.find({ route: req.params.routeId })
-      .populate("reportedBy", "name email")
-      .populate("route", "name startLocation endLocation")
-      .sort({ createdAt: -1 });
-
-    return res.status(200).json({
-      success: true,
-      count: incidents.length,
-      data: { incidents },
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-export const addComment = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { text } = req.body;
-
-    if (!text || !text.trim()) {
-      return res.status(400).json({
-        success: false,
-        message: "Comment text is required",
-      });
-    }
-
-    const incident = await Incident.findById(id);
-    if (!incident) {
-      return res.status(404).json({
-        success: false,
-        message: "Incident not found",
-      });
-    }
-
-    incident.comments.push({
-      user: req.user.id,
-      text: text.trim(),
-    });
-
-    await incident.save();
-
-    await Activity.create({
-      user: req.user.id,
-      incident: incident._id,
-      route: incident.route,
-      action: "commented",
-      message: `${req.user.name || "A user"} commented on a ${incident.type} incident`,
-      type: "incident",
-    });
-
-    return res.status(201).json({
-      success: true,
-      message: "Comment added successfully",
-      data: { comments: incident.comments },
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-export const getComments = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const incident = await Incident.findById(id).populate(
-      "comments.user",
-      "name email"
-    );
-
-    if (!incident) {
-      return res.status(404).json({
-        success: false,
-        message: "Incident not found",
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      count: incident.comments.length,
-      data: { comments: incident.comments },
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-export const deleteComment = async (req, res) => {
-  try {
-    const { id, commentId } = req.params;
-
-    const incident = await Incident.findById(id);
-    if (!incident) {
-      return res.status(404).json({
-        success: false,
-        message: "Incident not found",
-      });
-    }
-
-    const comment = incident.comments.id(commentId);
-    if (!comment) {
-      return res.status(404).json({
-        success: false,
-        message: "Comment not found",
-      });
-    }
-
-    if (comment.user.toString() !== req.user.id) {
-      return res.status(403).json({
-        success: false,
-        message: "User not authorized to delete this comment",
-      });
-    }
-
-    comment.deleteOne();
-    await incident.save();
-
-    return res.status(200).json({
-      success: true,
-      message: "Comment deleted successfully",
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-export const upvoteIncident = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const userId = req.user.id;
-
-    const incident = await Incident.findById(id);
-    if (!incident) {
-      return res.status(404).json({
-        success: false,
-        message: "Incident not found",
-      });
-    }
-
-    incident.downvotes = incident.downvotes.filter(
-      (uid) => uid.toString() !== userId.toString()
-    );
-
-    const isUpvoted = incident.upvotes.some(
-      (uid) => uid.toString() === userId.toString()
-    );
-
-    if (isUpvoted) {
-      incident.upvotes = incident.upvotes.filter(
-        (uid) => uid.toString() !== userId.toString()
-      );
-    } else {
-      incident.upvotes.push(userId);
-    }
-
-    await incident.save();
-
-    return res.status(200).json({
-      success: true,
-      data: { incident },
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-export const downvoteIncident = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const userId = req.user.id;
-
-    const incident = await Incident.findById(id);
-    if (!incident) {
-      return res.status(404).json({
-        success: false,
-        message: "Incident not found",
-      });
-    }
-
-    incident.upvotes = incident.upvotes.filter(
-      (uid) => uid.toString() !== userId.toString()
-    );
-
-    const isDownvoted = incident.downvotes.some(
-      (uid) => uid.toString() === userId.toString()
-    );
-
-    if (isDownvoted) {
-      incident.downvotes = incident.downvotes.filter(
-        (uid) => uid.toString() !== userId.toString()
-      );
-    } else {
-      incident.downvotes.push(userId);
-    }
-
-    await incident.save();
-
-    return res.status(200).json({
-      success: true,
-      data: { incident },
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-export const markIncidentAsStillThere = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const incident = await Incident.findById(id);
-
-    if (!incident) {
-      return res.status(404).json({
-        success: false,
-        message: "Incident not found",
-      });
-    }
-
-    incident.status = "stillThere";
-    await incident.save();
-
-    await Activity.create({
-      user: req.user.id,
-      incident: incident._id,
-      route: incident.route,
-      action: "stillThere",
-      message: `${req.user.name || "A user"} marked a ${incident.type} incident as still there`,
-      type: "incident",
-    });
-
-    return res.status(200).json({
-      success: true,
-      message: "Incident marked as still there",
-      data: { incident },
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-export const markIncidentAsCleared = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const incident = await Incident.findById(id);
-
-    if (!incident) {
-      return res.status(404).json({
-        success: false,
-        message: "Incident not found",
-      });
-    }
-
-    incident.status = "cleared";
-    await incident.save();
-
-    await Activity.create({
-      user: req.user.id,
-      incident: incident._id,
-      route: incident.route,
-      action: "cleared",
-      message: `${req.user.name || "A user"} marked a ${incident.type} incident as cleared`,
-      type: "incident",
-    });
-
-    return res.status(200).json({
-      success: true,
-      message: "Incident marked as cleared",
-      data: { incident },
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
+// DELETE /api/incidents/:id/comments/:commentId
+export const deleteComment = asyncHandler(async (req, res) => {
+  await deleteCommentService(req.params.id, req.params.commentId, req.user.id);
+  return successResponse(res, null, "Comment deleted successfully");
+});

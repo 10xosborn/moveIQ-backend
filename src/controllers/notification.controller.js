@@ -1,54 +1,32 @@
 import Notification from "../models/notification.model.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { successResponse } from "../utils/apiResponse.js";
+import { ApiError } from "../utils/apiError.js";
 
-// GET notifications for logged-in user
-export const getNotifications = async (req, res) => {
-  try {
-    const notifications = await Notification.find({ user: req.user.id })
-      .sort({ createdAt: -1 });
+// TODO: Move DB queries to service/database layers when this module grows
 
-    res.status(200).json({
-      success: true,
-      count: notifications.length,
-      data: { notifications },
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+// GET /api/notifications
+export const getNotifications = asyncHandler(async (req, res) => {
+  const notifications = await Notification.find({ user: req.user.id }).sort({
+    createdAt: -1,
+  });
+
+  return successResponse(res, {
+    notifications,
+    count: notifications.length,
+  });
+});
+
+// PATCH /api/notifications/:id/read
+export const markNotificationAsRead = asyncHandler(async (req, res) => {
+  const notification = await Notification.findById(req.params.id);
+
+  if (!notification) {
+    throw new ApiError("Notification not found", 404);
   }
-};
 
-export const markNotificationAsRead = async (req, res) => {
-  try {
-    const notification = await Notification.findById(req.params.id);
+  notification.isRead = true;
+  await notification.save();
 
-    if (!notification) {
-      return res.status(404).json({
-        success: false,
-        message: "Notification not found",
-      });
-    }
-
-    if (notification.user.toString() !== req.user.id) {
-      return res.status(401).json({
-        success: false,
-        message: "Not authorized to update this notification",
-      });
-    }
-
-    notification.isRead = true;
-    await notification.save();
-
-    res.status(200).json({
-      success: true,
-      message: "Notification marked as read",
-      data: { notification },
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
+  return successResponse(res, { notification }, "Notification marked as read");
+});

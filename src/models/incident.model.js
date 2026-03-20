@@ -1,4 +1,22 @@
 import mongoose from "mongoose";
+import { INCIDENT_TYPES } from "../utils/constants.js";
+
+const commentSchema = new mongoose.Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  text: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+});
 
 const incidentSchema = new mongoose.Schema(
   {
@@ -6,7 +24,7 @@ const incidentSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      enum: ["Heavy Traffic", "Roadblock", "Accident"],
+      enum: INCIDENT_TYPES,
     },
 
     latitude: {
@@ -33,8 +51,13 @@ const incidentSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["active", "stillThere", "cleared"],
+      enum: ["active", "cleared"],
       default: "active",
+    },
+
+    expiresAt: {
+      type: Date,
+      default: () => new Date(Date.now() + 2 * 60 * 60 * 1000), // Expires after 2 hours
     },
 
     upvotes: [
@@ -51,31 +74,10 @@ const incidentSchema = new mongoose.Schema(
       },
     ],
 
-    comments: [
-      {
-        user: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "User",
-          required: true,
-        },
-        text: {
-          type: String,
-          required: true,
-          trim: true,
-        },
-        createdAt: {
-          type: Date,
-          default: Date.now,
-        },
-      },
-    ],
+    comments: [commentSchema],
   },
   { timestamps: true }
 );
-
-// Performance indexes
-incidentSchema.index({ latitude: 1, longitude: 1 });
-incidentSchema.index({ createdAt: -1 });
 
 const Incident = mongoose.model("Incident", incidentSchema);
 

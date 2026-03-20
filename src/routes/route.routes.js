@@ -13,27 +13,19 @@ import {
 import protect from "../middlewares/auth.middleware.js";
 const router = express.Router();
 
-/*
-Create and get routes
-*/
+// Create and get routes
 router.post("/", protect, saveRoute);
 router.get("/", getAllRoutes);
 
-/*
-Special routes must come before :id
-*/
+// Special routes must come before :id
 router.get("/search", searchRoutes);
 router.get("/history", getRouteHistory);
 
-/*
-Routes that depend on id
-*/
+// Routes that depend on id
 router.get("/:id/details", getRouteDetails);
 router.get("/:id/incidents", getRouteIncidents);
 
-/*
-Generic id routes must be last
-*/
+// Generic id routes must be last
 router.get("/:id", getSingleRoute);
 router.delete("/:id", protect, deleteRoute);
 

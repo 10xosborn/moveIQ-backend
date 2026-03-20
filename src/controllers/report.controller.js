@@ -1,23 +1,13 @@
 import Incident from "../models/incident.model.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { successResponse } from "../utils/apiResponse.js";
 
-export const getReportsFeed = async (req, res) => {
-  try {
-    const reports = await Incident.find()
-      .populate("reportedBy", "name email")
-      .sort({ createdAt: -1 })
-      .limit(20);
+// TODO: Move DB queries to service/database layers when this module grows
+export const getReportsFeed = asyncHandler(async (req, res) => {
+  const reports = await Incident.find()
+    .populate("reportedBy", "name email")
+    .sort({ createdAt: -1 })
+    .limit(20);
 
-    res.status(200).json({
-      success: true,
-      count: reports.length,
-      data: {
-        reports,
-      },
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
+  return successResponse(res, { reports, count: reports.length });
+});
