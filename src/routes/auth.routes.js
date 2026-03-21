@@ -2,6 +2,9 @@ import express from "express";
 import {
   register,
   login,
+  googleLogin,
+  refreshToken,
+  verifyEmail,
   getCurrentUser,
   updateProfile,
   logout,
@@ -25,6 +28,15 @@ router.post("/register", validate(registerSchema), register);
 
 // login user
 router.post("/login", validate(loginSchema), login);
+
+// google login
+router.post("/google", googleLogin);
+
+// refresh access token
+router.post("/refresh-token", refreshToken);
+
+// verify email
+router.get("/verify-email/:token", verifyEmail);
 
 // get current logged-in user
 router.get("/current-user", protect, getCurrentUser);

@@ -3,6 +3,10 @@ import { successResponse } from "../utils/apiResponse.js";
 import {
   registerUser,
   loginUser,
+  googleLoginService,
+  refreshTokenService,
+  verifyEmailService,
+  logoutService,
   updateProfileService,
   forgotPasswordService,
   resetPasswordService,
@@ -20,6 +24,34 @@ export const login = asyncHandler(async (req, res) => {
   return successResponse(res, result, "Login successful");
 });
 
+// POST /api/auth/google
+export const googleLogin = asyncHandler(async (req, res) => {
+  const { credential } = req.body;
+
+  if (!credential) {
+    return res.status(400).json({
+      success: false,
+      message: "Google credential is required",
+    });
+  }
+
+  const result = await googleLoginService(credential);
+  return successResponse(res, result, "Google login successful");
+});
+
+// POST /api/auth/refresh-token
+export const refreshToken = asyncHandler(async (req, res) => {
+  const { refreshToken } = req.body;
+  const result = await refreshTokenService(refreshToken);
+  return successResponse(res, result, "Token refreshed");
+});
+
+// GET /api/auth/verify-email/:token
+export const verifyEmail = asyncHandler(async (req, res) => {
+  await verifyEmailService(req.params.token);
+  return successResponse(res, null, "Email verified successfully");
+});
+
 // GET /api/auth/current-user
 export const getCurrentUser = asyncHandler(async (req, res) => {
   return successResponse(res, { user: req.user });
@@ -33,7 +65,8 @@ export const updateProfile = asyncHandler(async (req, res) => {
 
 // POST /api/auth/logout
 export const logout = asyncHandler(async (req, res) => {
-  return successResponse(res, null, "Logout successful");
+  await logoutService(req.user.id);
+  return successResponse(res, null, "Logged out successfully");
 });
 
 // POST /api/auth/forgot-password

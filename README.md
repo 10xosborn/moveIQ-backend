@@ -9,7 +9,7 @@ MoveIQ collects crowdsourced traffic incident reports and provides real-time com
 ## Tech Stack
 
 | Technology | Purpose |
-|---|---|
+| --- | --- |
 | **Node.js** | Runtime environment |
 | **Express 5** | HTTP framework |
 | **MongoDB Atlas** | Cloud database |
@@ -20,6 +20,7 @@ MoveIQ collects crowdsourced traffic incident reports and provides real-time com
 | **Helmet** | Security headers |
 | **Morgan** | HTTP request logging |
 | **express-rate-limit** | Rate limiting |
+| **google-auth-library** | Google OAuth verification |
 
 ---
 
@@ -27,7 +28,7 @@ MoveIQ collects crowdsourced traffic incident reports and provides real-time com
 
 MoveIQ uses a **layered architecture** that enforces strict separation of concerns. Every request follows a one-directional flow:
 
-```
+```text
 Route → Validator → Controller → Service → Database → Model
 ```
 
@@ -46,7 +47,7 @@ Each layer has a single responsibility and communicates only with the layer dire
 
 ## Project Structure
 
-```
+```text
 src/
 ├── config/            # Environment and database configuration
 ├── controllers/       # Request handlers (thin — delegate to services)
@@ -161,10 +162,31 @@ Shared utilities used across all layers.
 
 ### Authentication
 
+MoveIQ uses a **dual-token system** for secure session management:
+
+- **Access Token** — Short-lived (15 minutes), sent in the `Authorization: Bearer` header for every protected request.
+- **Refresh Token** — Long-lived (7 days), stored server-side in the user document. Used to obtain new access tokens without re-login.
 - Passwords are hashed with **bcryptjs** before storage.
-- On login, a **JWT** token is issued with the user ID and a configurable expiry (`JWT_EXPIRES_IN`).
-- Protected routes require a `Bearer` token in the `Authorization` header.
-- The `protect` middleware verifies the token and attaches the user object to `req.user`.
+- The `protect` middleware verifies the access token and attaches the user to `req.user`.
+
+### Google OAuth
+
+- Users can authenticate via **Google Sign-In** using the `POST /api/auth/google` endpoint.
+- The backend verifies the Google ID token using `google-auth-library`.
+- If a local user logs in with Google for the first time, their account is **linked** (provider updated to `google`).
+- Google users are **auto-verified** (no email verification needed) and **cannot** use forgot/reset password.
+
+### Email Verification
+
+- On registration, a `verificationToken` is generated and returned.
+- The frontend sends the user to `GET /api/auth/verify-email/:token` to verify their email.
+- Unverified users can still log in (verification enforcement is up to the frontend/business rules).
+
+### Session Management
+
+- **Login/Register**: Returns `accessToken` + `refreshToken`.
+- **Token Refresh**: `POST /api/auth/refresh-token` returns a new `accessToken`.
+- **Logout**: `POST /api/auth/logout` clears the server-side refresh token, invalidating the session.
 
 ### Error Handling
 
@@ -179,6 +201,7 @@ All errors flow through a centralized pipeline:
 All API responses follow a standard format:
 
 **Success:**
+
 ```json
 {
   "success": true,
@@ -188,6 +211,7 @@ All API responses follow a standard format:
 ```
 
 **Error:**
+
 ```json
 {
   "success": false,
@@ -196,6 +220,7 @@ All API responses follow a standard format:
 ```
 
 **Validation Error:**
+
 ```json
 {
   "success": false,
@@ -230,15 +255,18 @@ Request validation uses **Joi** schemas applied as middleware:
 
 ### Auth (`/api/auth`)
 
-User registration, login, profile management, and password recovery. Supports both email and phone-based authentication. Tokens are issued on registration and login.
+User registration, login, Google OAuth, token management, email verification, profile management, and password recovery. Supports email, phone, and Google authentication. Access and refresh tokens are issued on login/register.
 
 | Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| POST | `/register` | No | Register a new user |
-| POST | `/login` | No | Login and receive token |
+| ------ | -------- | ---- | ----------- |
+| POST | `/register` | No | Register and receive access + refresh tokens |
+| POST | `/login` | No | Login and receive access + refresh tokens |
+| POST | `/google` | No | Google OAuth login |
+| POST | `/refresh-token` | No | Get new access token using refresh token |
+| GET | `/verify-email/:token` | No | Verify user email address |
 | GET | `/current-user` | Yes | Get authenticated user profile |
 | PUT | `/profile` | Yes | Update user profile |
-| POST | `/logout` | Yes | Logout user |
+| POST | `/logout` | Yes | Logout and invalidate refresh token |
 | POST | `/forgot-password` | No | Request password reset token |
 | POST | `/reset-password/:token` | No | Reset password with token |
 
@@ -247,7 +275,7 @@ User registration, login, profile management, and password recovery. Supports bo
 Manage Lagos commuter corridors. Routes are seeded with 10 priority Lagos routes and can be created by authenticated users. Each route auto-generates a URL-safe slug from its name.
 
 | Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
+| ------ | -------- | ---- | ----------- |
 | POST | `/` | Yes | Create a new route |
 | GET | `/` | No | Get all routes |
 | GET | `/search?q=` | No | Search routes by name or location |
@@ -262,7 +290,7 @@ Manage Lagos commuter corridors. Routes are seeded with 10 priority Lagos routes
 Core feature — crowdsourced incident reporting. Users report incidents (Heavy Traffic, Roadblock, Accident) at specific GPS coordinates linked to routes. Incidents support upvoting/downvoting (mutually exclusive), community comments, and lifecycle management (still-there/cleared).
 
 | Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
+| ------ | -------- | ---- | ----------- |
 | POST | `/` | Yes | Report a new incident |
 | GET | `/` | Yes | Get all incidents |
 | GET | `/nearby?latitude=&longitude=` | Yes | Get incidents near a location |
@@ -283,7 +311,7 @@ Core feature — crowdsourced incident reporting. Users report incidents (Heavy 
 User-scoped notifications for route and incident events.
 
 | Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
+| ------ | -------- | ---- | ----------- |
 | GET | `/` | Yes | Get user notifications |
 | PATCH | `/:id/read` | Yes | Mark notification as read |
 
@@ -292,7 +320,7 @@ User-scoped notifications for route and incident events.
 Combined feed of the latest incidents and route creations, sorted by recency.
 
 | Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
+| ------ | -------- | ---- | ----------- |
 | GET | `/` | No | Get activity feed |
 
 ### Reports (`/api/reports`)
@@ -300,13 +328,13 @@ Combined feed of the latest incidents and route creations, sorted by recency.
 Feed of the most recent incident reports.
 
 | Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
+| ------ | -------- | ---- | ----------- |
 | GET | `/feed` | No | Get latest reports |
 
 ### Health & Root
 
 | Method | Endpoint | Description |
-|--------|----------|-------------|
+| ------ | -------- | ----------- |
 | GET | `/` | API status check |
 | GET | `/health` | Uptime and health check |
 
@@ -334,8 +362,11 @@ Create a `.env` file in the project root:
 ```env
 PORT=5000
 MONGO_URI=your_mongodb_atlas_connection_string
-JWT_SECRET=your_secret_key
-JWT_EXPIRES_IN=7d
+JWT_SECRET=your_access_token_secret
+JWT_EXPIRES_IN=15m
+JWT_REFRESH_SECRET=your_refresh_token_secret
+JWT_REFRESH_EXPIRES_IN=7d
+GOOGLE_CLIENT_ID=your_google_client_id
 ```
 
 ### 4. Seed the database
@@ -382,13 +413,14 @@ The server will start at `http://localhost:5000`.
 
 ## Postman Collection
 
-A complete Postman collection with all 30 endpoints is included at:
+A complete Postman collection with all endpoints is included at:
 
-```
+```text
 MoveIQ_API.postman_collection.json
 ```
 
 Import it into Postman to test all endpoints. The collection includes:
+
 - Pre-configured variables (`baseUrl`, `token`).
 - Auto-save token on login/register.
 - Example request bodies and responses.
@@ -398,12 +430,12 @@ Import it into Postman to test all endpoints. The collection includes:
 ## Git Workflow
 
 | Branch | Purpose |
-|--------|---------|
+| --- | --- |
 | `main` | Production-ready code |
 | `develop` | Integration branch |
 | `feature/*` | Individual feature branches |
 
-```
+```text
 feature branch → pull request → develop → main
 ```
 

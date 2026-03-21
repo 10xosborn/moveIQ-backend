@@ -25,8 +25,32 @@ const userSchema = new mongoose.Schema(
 
     password: {
       type: String,
-      required: [true, "Password is required"],
       minlength: 6,
+      required: [
+        function () {
+          return this.provider === "local";
+        },
+        "Password is required for local accounts",
+      ],
+    },
+
+    provider: {
+      type: String,
+      enum: ["local", "google"],
+      default: "local",
+    },
+
+    refreshToken: {
+      type: String,
+    },
+
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+
+    verificationToken: {
+      type: String,
     },
 
     resetPasswordToken: {

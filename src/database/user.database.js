@@ -40,3 +40,15 @@ export const findUserByResetTokenDB = async (hashedToken) => {
 export const saveUserDB = async (user) => {
   return await user.save();
 };
+
+export const findUserByEmailOnlyDB = async (email) => {
+  return await User.findOne({ email });
+};
+
+export const findUserByVerificationTokenDB = async (token) => {
+  return await User.findOne({ verificationToken: token });
+};
+
+export const clearRefreshTokenDB = async (userId) => {
+  return await User.findByIdAndUpdate(userId, { refreshToken: null });
+};
