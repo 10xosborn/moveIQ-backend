@@ -55,7 +55,7 @@ src/
 ├── database/          # Mongoose query functions
 ├── models/            # Mongoose schemas and models
 ├── routes/            # Express route definitions
-├── middlewares/        # Auth, error handling, rate limiting, validation
+├── middlewares/       # Auth, error handling, rate limiting, validation
 ├── validators/        # Joi validation schemas
 ├── utils/             # Shared utilities (error classes, response helpers, logger)
 ├── data/              # Seed data for initial routes
