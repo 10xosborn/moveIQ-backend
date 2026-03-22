@@ -9,6 +9,7 @@ import routeRoutes from "./routes/route.routes.js";
 import notificationRoutes from "./routes/notification.routes.js";
 import activityRoutes from "./routes/activity.routes.js";
 import reportRoutes from "./routes/report.routes.js";
+import contactRoutes from "./routes/contact.routes.js";
 import { authLimiter, generalLimiter } from "./middlewares/rateLimit.middleware.js";
 import { errorHandler } from "./middlewares/error.middleware.js";
 
@@ -31,6 +32,7 @@ app.use("/api/routes", routeRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/activities", activityRoutes);
 app.use("/api/reports", reportRoutes);
+app.use("/api/contact", contactRoutes);
 
 // Health check route
 app.get("/health", (req, res) => {
