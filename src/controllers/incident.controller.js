@@ -18,18 +18,6 @@ import {
   markClearedService,
 } from "../services/incident.service.js";
 
-const formatIncident = (incident) => {
-  const plainIncident =
-    typeof incident.toObject === "function" ? incident.toObject() : incident;
-
-  return {
-    ...plainIncident,
-    upvotesCount: plainIncident.upvotes?.length || 0,
-    downvotesCount: plainIncident.downvotes?.length || 0,
-    commentsCount: plainIncident.comments?.length || 0,
-  };
-};
-
 // POST /api/incidents
 export const createIncident = asyncHandler(async (req, res) => {
   const { type, latitude, longitude, route } = req.body;
@@ -40,29 +28,19 @@ export const createIncident = asyncHandler(async (req, res) => {
     route,
     reportedBy: req.user.id,
   });
-  return successResponse(
-    res,
-    { incident: formatIncident(incident) },
-    "Incident reported successfully",
-    201
-  );
+  return successResponse(res, { incident }, "Incident reported successfully", 201);
 });
 
 // GET /api/incidents
 export const getIncidents = asyncHandler(async (req, res) => {
   const incidents = await getAllIncidentsService();
-  const formattedIncidents = incidents.map(formatIncident);
-
-  return successResponse(res, {
-    incidents: formattedIncidents,
-    count: formattedIncidents.length,
-  });
+  return successResponse(res, { incidents, count: incidents.length });
 });
 
 // GET /api/incidents/:id
 export const getIncidentById = asyncHandler(async (req, res) => {
   const incident = await getIncidentByIdService(req.params.id);
-  return successResponse(res, { incident: formatIncident(incident) });
+  return successResponse(res, { incident });
 });
 
 // GET /api/incidents/nearby?latitude=...&longitude=...
@@ -77,34 +55,19 @@ export const getNearbyIncidents = asyncHandler(async (req, res) => {
     Number(latitude),
     Number(longitude)
   );
-
-  const formattedIncidents = incidents.map(formatIncident);
-
-  return successResponse(res, {
-    incidents: formattedIncidents,
-    count: formattedIncidents.length,
-  });
+  return successResponse(res, { incidents, count: incidents.length });
 });
 
 // GET /api/incidents/route/:routeId
 export const getIncidentsByRoute = asyncHandler(async (req, res) => {
   const incidents = await getIncidentsByRouteService(req.params.routeId);
-  const formattedIncidents = incidents.map(formatIncident);
-
-  return successResponse(res, {
-    incidents: formattedIncidents,
-    count: formattedIncidents.length,
-  });
+  return successResponse(res, { incidents, count: incidents.length });
 });
 
 // PUT /api/incidents/:id
 export const updateIncident = asyncHandler(async (req, res) => {
   const incident = await updateIncidentService(req.params.id, req.body);
-  return successResponse(
-    res,
-    { incident: formatIncident(incident) },
-    "Incident updated successfully"
-  );
+  return successResponse(res, { incident }, "Incident updated successfully");
 });
 
 // DELETE /api/incidents/:id
@@ -116,33 +79,25 @@ export const deleteIncident = asyncHandler(async (req, res) => {
 // PATCH /api/incidents/:id/upvote
 export const upvoteIncident = asyncHandler(async (req, res) => {
   const incident = await upvoteIncidentService(req.params.id, req.user.id);
-  return successResponse(res, { incident: formatIncident(incident) });
+  return successResponse(res, { incident });
 });
 
 // PATCH /api/incidents/:id/downvote
 export const downvoteIncident = asyncHandler(async (req, res) => {
   const incident = await downvoteIncidentService(req.params.id, req.user.id);
-  return successResponse(res, { incident: formatIncident(incident) });
+  return successResponse(res, { incident });
 });
 
 // PATCH /api/incidents/:id/still-there
 export const markStillThere = asyncHandler(async (req, res) => {
   const incident = await markStillThereService(req.params.id);
-  return successResponse(
-    res,
-    { incident: formatIncident(incident) },
-    "Incident marked as still there"
-  );
+  return successResponse(res, { incident }, "Incident marked as still there");
 });
 
 // PATCH /api/incidents/:id/cleared
 export const markCleared = asyncHandler(async (req, res) => {
   const incident = await markClearedService(req.params.id);
-  return successResponse(
-    res,
-    { incident: formatIncident(incident) },
-    "Incident marked as cleared"
-  );
+  return successResponse(res, { incident }, "Incident marked as cleared");
 });
 
 // POST /api/incidents/:id/comments
